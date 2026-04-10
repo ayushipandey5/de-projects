@@ -1,2 +1,3 @@
 *.csv
-.venv/*
+olist-lakehouse/.venv
+olist-lakehouse/kaggle_data_raw
