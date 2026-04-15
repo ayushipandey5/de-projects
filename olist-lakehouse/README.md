@@ -8,7 +8,7 @@ This dataset contains 9 tables, categorized in :
         -  olist_geolocation_dataset (Zip codes and coordinates)
         -  product_category_name_translation (English translations)
 
-    - **Type 1 SCD Fact** (Upsert) : Keep only latest records. Not storing history. 
+    - **Type 1 SCD** (Upsert) : Keep only latest records. Not storing history. 
         - olist_customers_dataset (Customer info)
         - olist_products_dataset (Product info)
         - olist_sellers_dataset (Seller info)
