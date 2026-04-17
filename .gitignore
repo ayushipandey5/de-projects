@@ -1,3 +1,5 @@
 *.csv
 olist-lakehouse/.venv
 olist-lakehouse/kaggle_data_raw
+keys/
+credentials/
