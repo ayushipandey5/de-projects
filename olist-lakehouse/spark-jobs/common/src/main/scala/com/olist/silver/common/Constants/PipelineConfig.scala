@@ -1,8 +1,9 @@
-package com.olist.silver.common.utils
+package com.olist.silver.common.Constants
 
 case class SourceConfig(
                         dataPath : String,
                         checkPointPath: String,
+                        partitionColumn: String,
                         processDate : Int
                        )
 case class SinkConfig(

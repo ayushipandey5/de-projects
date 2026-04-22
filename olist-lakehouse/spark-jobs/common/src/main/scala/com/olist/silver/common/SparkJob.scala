@@ -1,6 +1,7 @@
 package com.olist.silver.common
 
-import com.olist.silver.common.utils.{ConfigLoader, PipelineConfig}
+import com.olist.silver.common.Constants.PipelineConfig
+import com.olist.silver.common.utils.ConfigLoader
 import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.SparkSession
 
@@ -34,10 +35,10 @@ trait SparkJob {
     sparkSession.sparkContext.setLogLevel("WARN")
 
     try {
-      run(config)
+      runPipeline(config)
     }
     finally sparkSession.stop()
   }
 
-  def run(config: PipelineConfig)(implicit sparkSession: SparkSession) : Unit
+  def runPipeline(config: PipelineConfig)(implicit sparkSession: SparkSession) : Unit
 }

@@ -1,5 +1,6 @@
 package com.olist.silver.common.utils
 
+import com.olist.silver.common.Constants.PipelineConfig
 import pureconfig._
 import pureconfig.generic.auto._
 
