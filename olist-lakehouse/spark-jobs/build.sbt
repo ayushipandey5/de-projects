@@ -31,7 +31,8 @@ lazy val common = (project in file("common"))
       "org.apache.logging.log4j" % "log4j-api" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-core" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.20.0",
-      "com.github.pureconfig" %% "pureconfig" % "0.17.4"
+      "com.github.pureconfig" %% "pureconfig" % "0.17.4",
+      "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5"
     ),
 //    libraryDependencies ++= sparkDependencies
 

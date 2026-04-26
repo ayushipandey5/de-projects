@@ -4,7 +4,8 @@ case class SourceConfig(
                         dataPath : String,
                         checkPointPath: String,
                         partitionColumn: String,
-                        processDate : Int
+                        maxPartitionsToRead : Int,
+                        fileFormat : String
                        )
 case class SinkConfig(
                      dataPath : String
@@ -13,8 +14,8 @@ case class SinkConfig(
 case class PipelineConfig(
                           appName: String,
                           runEnv : String,
-                          gcpProjectId : String,
-                          serviceAccountPath : String,
+                          gcpProjectId : Option[String],
+                          serviceAccountPath : Option[String],
                           source: SourceConfig,
                           sink : SinkConfig,
                           sparkOptions : Map[String, String]

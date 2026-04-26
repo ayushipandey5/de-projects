@@ -1,4 +1,4 @@
-package com.olist.silver.common.utils
+package com.olist.silver.common.Utils
 
 import com.olist.silver.common.Constants.PipelineConfig
 import pureconfig._

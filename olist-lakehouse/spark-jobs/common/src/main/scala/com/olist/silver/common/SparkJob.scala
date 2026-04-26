@@ -1,7 +1,7 @@
 package com.olist.silver.common
 
 import com.olist.silver.common.Constants.PipelineConfig
-import com.olist.silver.common.utils.ConfigLoader
+import com.olist.silver.common.Utils.ConfigLoader
 import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.SparkSession
 
@@ -18,20 +18,11 @@ trait SparkJob {
     logger.info("Creating sparkSession")
 
     implicit val sparkSession: SparkSession = {
-      config.runEnv match {
-        case "local" => SparkSession.builder()
-          .appName(config.appName)
-          .config(config.sparkOptions)
-          .master("local[*]")
-          .getOrCreate()
-
-        case _ => SparkSession.builder()
-          .appName(config.appName)
-          .config(config.sparkOptions)
-          .getOrCreate()
-      }
+      val builder = SparkSession.builder().appName(config.appName)
+      config.sparkOptions.foreach{case (key,value) =>
+      builder.config(key,value)}
+      builder.getOrCreate()
     }
-
     sparkSession.sparkContext.setLogLevel("WARN")
 
     try {
