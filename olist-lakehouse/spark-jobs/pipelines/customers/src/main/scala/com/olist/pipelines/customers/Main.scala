@@ -1,6 +1,6 @@
 package com.olist.pipelines.customers
 
-import com.olist.pipelines.customers.Constants.ColumnConstants.{orderByCols, partitionByCols}
+import com.olist.pipelines.customers.Constants.ColumnConstants.{TargetSchema, orderByCols, partitionByCols}
 import com.olist.pipelines.customers.Services.Transformer
 import com.olist.silver.common.Constants.PipelineConfig
 import com.olist.silver.common.SparkJob
@@ -15,10 +15,19 @@ object Main extends SparkJob {
   }
   override def runPipeline(config: PipelineConfig)(implicit sparkSession: SparkSession): Unit = {
     val (rawDF, maxProcessedPartition) = ReadWriteHelper.readFromSource(config)
-    logger.info(s"Max processed partition : ${maxProcessedPartition}")
     val transformedDF = Transformer.execute(rawDF)
-    val sinkData = UpsertHelper.execute(transformedDF,config.source.dataPath, config.source.partitionColumn,partitionByCols, orderByCols)
-
+    val sinkDF = UpsertHelper.execute(transformedDF,config.sink.dataPath, "state",partitionByCols, orderByCols, TargetSchema)
+    ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath, "state")
+    updateCheckPoint(maxProcessedPartition,config.source.checkPointPath)
+  }
+  private def updateCheckPoint (maxProcessedPartition : String, checkPointPath : String)
+                               (implicit sparkSession: SparkSession): Unit = {
+    import sparkSession.implicits._
+    logger.info(s"Updating checkpoint : ${maxProcessedPartition}")
+    val checkPointDF = List(maxProcessedPartition).toDF("value")
+    checkPointDF.write
+      .mode("overwrite")
+      .text(checkPointPath)
   }
 
 }

@@ -4,6 +4,7 @@ import com.olist.silver.common.Constants.PipelineConfig
 import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.functions._
 
 
 object ReadWriteHelper {
@@ -34,7 +35,7 @@ object ReadWriteHelper {
       case "csv" => sparkSession.read.csv(validPartitions:_*)
       case _ => throw new IllegalArgumentException(s"Format $fileFormat not supported")
     }
-    (readDF,validPartitions.last)
+    (readDF,validPartitions.last.split("=").last)
   }
 
 
@@ -69,5 +70,21 @@ object ReadWriteHelper {
     }
 
   }
+
+  def writeToGCS(sinkDF : DataFrame, sinkPath: String,partitionColumn: String) : Unit = {
+    logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
+
+    sinkDF
+      .repartition(col(partitionColumn))
+      .write
+      .format("parquet")
+      .partitionBy(partitionColumn)
+      .mode("overwrite")
+      .save(sinkPath)
+
+    logger.info("Write to GCS completed successfully.")
+  }
+
+
 
 }
