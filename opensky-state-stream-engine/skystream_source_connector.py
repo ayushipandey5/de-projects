@@ -11,12 +11,16 @@ REQUEST_INTERVAL = RATE_LIMIT_RESET_INTERVAL/RATE_LIMIT_TOTAL_REQUESTS
 
 CLIENT_ID , CLIENT_SECRET = os.getenv('OPENSKY_CLIENT_ID') , os.getenv('OPENSKY_CLIENT_SECRET')
 
+if not ClIENT_ID or not CLIENT_SECRET:
+    raise ValueError("OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET environment variables must be set")
+
 TOKEN_REFRESH_INTERVAL = 30 #minuites
 TOKEN_REFRESH_MARGIN = 30 #seconds
 TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
 
 class TokenManager:
-    def __init__(self):
+    def __init__(self, session: requests.Session ):
+        self.session = session
         self.token = None
         self.expires_at = None
 
@@ -26,7 +30,7 @@ class TokenManager:
         return self._refresh_token()
     
     def _refresh_token(self):
-        r = requests.post(
+        r = self.session.post(
             TOKEN_URL,
             data = {
                 "grant_type": "client_credentials",
@@ -46,10 +50,11 @@ class TokenManager:
         return {"Authorization": f"Bearer {self.get_token()}"}
 
 DATA_URL = "https://opensky-network.org/api/states/all"
-tokens = TokenManager()
-
-while(True):
-    response = requests.get(
+session = requests.Session()
+tokens = TokenManager(session)
+i=2
+while(i--):
+    response = session.get(
         DATA_URL,
         headers = tokens.headers()
     )
@@ -60,3 +65,5 @@ while(True):
         print("Error fetching data")
     
     time.sleep(REQUEST_INTERVAL)
+
+session.close()
