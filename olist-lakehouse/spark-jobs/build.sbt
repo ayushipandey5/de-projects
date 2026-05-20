@@ -70,3 +70,13 @@ lazy val reference_dimensions = (project in file("pipelines/reference_dimensions
     assembly / mainClass := Some("com.olist.pipelines.reference_dimensions.Main"),
     assembly / assemblyJarName := s"reference-dimensions-dpp-$dttm.jar"
   )
+
+lazy val order_payments = (project in file("pipelines/order_payments"))
+  .dependsOn(common)
+  .settings(
+    commonAssemblySettings,
+    libraryDependencies ++= sparkDependencies,
+    name := "olist-order-payments-pipeline",
+    assembly / mainClass := Some("com.olist.pipelines.order_payments.Main"),
+    assembly / assemblyJarName := s"order-payments-dpp-$dttm.jar"
+  )

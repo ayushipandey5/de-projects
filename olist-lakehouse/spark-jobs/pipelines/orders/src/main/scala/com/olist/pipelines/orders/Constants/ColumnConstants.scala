@@ -31,6 +31,6 @@ object ColumnConstants {
     lit(99)
   )
 
-  val partitonByCols = Seq(col("order_id"))
-  val orderByCols = Seq(statusWeightedColumn.asc, col("order_purchase_timestamp").desc)
+  val dedupePartitionCols = Seq(col("order_id"))
+  val dedupeOrderByCols = Seq(statusWeightedColumn.asc, col("order_purchase_timestamp").desc)
 }
