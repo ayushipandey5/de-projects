@@ -39,6 +39,17 @@ lazy val common = (project in file("common"))
   )
 
 
+lazy val type1_scd = (project in file("pipelines/type1_scd"))
+  .dependsOn(common)
+  .settings(
+    commonAssemblySettings,
+    libraryDependencies ++= sparkDependencies,
+    name := "olist-type1-scd-pipeline",
+    assembly / mainClass := Some("com.olist.pipelines.type1_scd.Main"),
+    assembly / assemblyJarName := s"type1-scd-dpp-$dttm.jar"
+  )
+
+
 lazy val orders = (project in file("pipelines/orders"))
   .dependsOn(common)
   .settings(
@@ -46,15 +57,16 @@ lazy val orders = (project in file("pipelines/orders"))
     libraryDependencies ++= sparkDependencies,
     name := "olist-orders-pipeline",
     assembly / mainClass := Some("com.olist.pipelines.orders.Main"),
-    assembly / assemblyJarName := s"orders-pipeline-$dttm.jar"
+    assembly / assemblyJarName := s"orders-dpp-$dttm.jar"
   )
 
-lazy val customers = (project in file("pipelines/customers"))
+
+lazy val reference_dimensions = (project in file("pipelines/reference_dimensions"))
   .dependsOn(common)
   .settings(
     commonAssemblySettings,
     libraryDependencies ++= sparkDependencies,
-    name := "olist-customers-pipeline",
-    assembly / mainClass := Some("com.olist.pipelines.customers.Main"),
-    assembly / assemblyJarName := s"customers-pipeline-$dttm.jar"
+    name := "olist-reference-dimensions-pipeline",
+    assembly / mainClass := Some("com.olist.pipelines.reference_dimensions.Main"),
+    assembly / assemblyJarName := s"reference-dimensions-dpp-$dttm.jar"
   )

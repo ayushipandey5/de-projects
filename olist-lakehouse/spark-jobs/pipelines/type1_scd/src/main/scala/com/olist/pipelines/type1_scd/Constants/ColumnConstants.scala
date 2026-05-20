@@ -1,4 +1,4 @@
-package com.olist.pipelines.customers.Constants
+package com.olist.pipelines.type1_scd.Constants
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StringType, StructField, StructType, TimestampType}
 

@@ -1,6 +1,6 @@
-package com.olist.pipelines.customers.Services
+package com.olist.pipelines.type1_scd.Services
 
-import com.olist.pipelines.customers.Constants.ColumnConstants.customerColMap
+import com.olist.pipelines.type1_scd.Constants.ColumnConstants.customerColMap
 import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._

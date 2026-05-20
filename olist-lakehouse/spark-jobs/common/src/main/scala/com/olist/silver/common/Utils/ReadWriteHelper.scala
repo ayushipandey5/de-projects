@@ -71,7 +71,7 @@ object ReadWriteHelper {
 
   }
 
-  def writeToGCS(sinkDF : DataFrame, sinkPath: String,partitionColumn: String) : Unit = {
+  def writeToGCS(sinkDF : DataFrame, sinkPath: String,mode:String,partitionColumn: String) : Unit = {
     logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
 
     sinkDF
@@ -79,7 +79,7 @@ object ReadWriteHelper {
       .write
       .format("parquet")
       .partitionBy(partitionColumn)
-      .mode("overwrite")
+      .mode(mode)
       .save(sinkPath)
 
     logger.info("Write to GCS completed successfully.")
