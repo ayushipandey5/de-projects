@@ -12,9 +12,14 @@ object UpsertHelper {
 
   def execute(inputDF: DataFrame, sinkPath: String, partitionCol: String, partitionByCols: Seq[Column], orderByCols: Seq[Column], TargetSchema: StructType)
             (implicit sparkSession: SparkSession) : DataFrame = {
-    val partitionsToUpdate = inputDF.select(partitionCol).distinct().collect().map(_.getString(0))
-    val coreDF = getCoreDF(sinkPath,partitionCol,partitionsToUpdate,TargetSchema)
-
+    
+    val coreDF = if(partitionCol.isBlank){
+      sparkSession.read.parquet(sinkPath)
+    }
+    else {
+      val partitionsToUpdate = inputDF.select(partitionCol).distinct().collect().map(_.getString(0))
+      getCoreDF(sinkPath, partitionCol, partitionsToUpdate, TargetSchema)
+    }
     val bronzeDF = inputDF.withColumn("priority", lit(1))
     val silverDF = coreDF.withColumn("priority", lit(2))
 

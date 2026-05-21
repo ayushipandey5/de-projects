@@ -80,3 +80,23 @@ lazy val order_payments = (project in file("pipelines/order_payments"))
     assembly / mainClass := Some("com.olist.pipelines.order_payments.Main"),
     assembly / assemblyJarName := s"order-payments-dpp-$dttm.jar"
   )
+
+lazy val order_items = (project in file("pipelines/order_items"))
+  .dependsOn(common)
+  .settings(
+    commonAssemblySettings,
+    libraryDependencies ++= sparkDependencies,
+    name := "olist-order-items-pipeline",
+    assembly / mainClass := Some("com.olist.pipelines.order_items.Main"),
+    assembly / assemblyJarName := s"order-items-dpp-$dttm.jar"
+  )
+
+lazy val order_reviews = (project in file("pipelines/order_reviews"))
+  .dependsOn(common)
+  .settings(
+    commonAssemblySettings,
+    libraryDependencies ++= sparkDependencies,
+    name := "olist-order-reviews-pipeline",
+    assembly / mainClass := Some("com.olist.pipelines.order_reviews.Main"),
+    assembly / assemblyJarName := s"order-reviews-dpp-$dttm.jar"
+  )

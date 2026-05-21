@@ -8,7 +8,8 @@ case class SourceConfig(
                         fileFormat : String
                        )
 case class SinkConfig(
-                     dataPath : String
+                     dataPath : String,
+                     partitionColumn : String
                      )
 
 case class PipelineConfig(
