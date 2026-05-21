@@ -16,10 +16,16 @@ object Main extends SparkJob {
   override def runPipeline(config: PipelineConfig)(implicit sparkSession: SparkSession): Unit = {
     val (rawDF, maxProcessedPartition) = ReadWriteHelper.readFromSource(config)
     val transformedDF = Transformer.execute(rawDF,config.appName)
-    val (dedupPartitionByCols, dedupOrderByCols, targetSchema) = config.appName match {
-      case name if name.contains("customers") => (dedupCustomersPartitionByCols, dedupCustomersOrderByCols, CustomersTargetSchema)
-      case name if name.contains("sellers") => (dedupSellersPartitionByCols, dedupSellersOrderByCols, SellersTargetSchema)
-      case name if name.contains("products") => (dedupProductsPartitionByCols, dedupProductsOrderByCols, ProductsTargetSchema)
+    val (reorderedDF, dedupPartitionByCols, dedupOrderByCols, targetSchema) = config.appName match {
+      case name if name.contains("customers") => (
+        DataProcessingHelper.selectAndReorder(transformedDF,CustomersTargetSchema)
+        ,dedupCustomersPartitionByCols, dedupCustomersOrderByCols, CustomersTargetSchema)
+      case name if name.contains("sellers") => (
+        DataProcessingHelper.selectAndReorder(transformedDF,SellersTargetSchema)
+        ,dedupSellersPartitionByCols, dedupSellersOrderByCols, SellersTargetSchema)
+      case name if name.contains("products") => (
+        DataProcessingHelper.selectAndReorder(transformedDF,ProductsTargetSchema)
+        ,dedupProductsPartitionByCols, dedupProductsOrderByCols, ProductsTargetSchema)
     }
     val sinkDF = UpsertHelper.execute(transformedDF,config.sink.dataPath, config.sink.partitionColumn,dedupPartitionByCols, dedupOrderByCols, targetSchema)
     ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath,"overwrite",config.sink.partitionColumn)

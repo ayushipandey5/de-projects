@@ -72,15 +72,24 @@ object ReadWriteHelper {
   }
 
   def writeToGCS(sinkDF : DataFrame, sinkPath: String,mode:String,partitionColumn: String) : Unit = {
-    logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
-
-    sinkDF
-      .repartition(col(partitionColumn))
-      .write
-      .format("parquet")
-      .partitionBy(partitionColumn)
-      .mode(mode)
-      .save(sinkPath)
+    if(partitionColumn.isEmpty){
+      logger.info(s"No partition column mentioned, ${mode}ing to ${sinkPath}")
+      sinkDF
+        .write
+        .format("parquet")
+        .mode(mode)
+        .save(sinkPath)
+    }
+    else {
+      logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
+      sinkDF
+        .repartition(col(partitionColumn))
+        .write
+        .format("parquet")
+        .partitionBy(partitionColumn)
+        .mode(mode)
+        .save(sinkPath)
+    }
 
     logger.info("Write to GCS completed successfully.")
   }

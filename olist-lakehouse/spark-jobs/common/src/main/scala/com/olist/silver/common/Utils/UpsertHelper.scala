@@ -12,7 +12,7 @@ object UpsertHelper {
 
   def execute(inputDF: DataFrame, sinkPath: String, partitionCol: String, partitionByCols: Seq[Column], orderByCols: Seq[Column], TargetSchema: StructType)
             (implicit sparkSession: SparkSession) : DataFrame = {
-    
+
     val coreDF = if(partitionCol.isBlank){
       sparkSession.read.parquet(sinkPath)
     }

@@ -16,7 +16,8 @@ object Main extends SparkJob{
   override def runPipeline(config: PipelineConfig)(implicit sparkSession: SparkSession): Unit = {
     val (rawDF, maxProcessedPartition) = ReadWriteHelper.readFromSource(config)
     val transformedDF = Transformer.execute(rawDF)
-    val stagingDF = UpsertHelper.execute(transformedDF.filter(col(config.source.partitionColumn).isNotNull) ,
+    val reorderedDF = DataProcessingHelper.selectAndReorder(transformedDF,TargetSceham)
+    val stagingDF = UpsertHelper.execute(reorderedDF.filter(col(config.source.partitionColumn).isNotNull) ,
       config.sink.dataPath,
       config.source.partitionColumn,
       partitionByCols = dedupePartitionCols,
