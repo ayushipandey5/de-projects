@@ -14,7 +14,14 @@ object UpsertHelper {
             (implicit sparkSession: SparkSession) : DataFrame = {
 
     val coreDF = if(partitionCol.isBlank){
-      sparkSession.read.parquet(sinkPath)
+      try {
+        sparkSession.read.parquet(sinkPath)
+      } catch {
+        case e: org.apache.spark.sql.AnalysisException if e.getMessage().contains("UNABLE_TO_INFER_SCHEMA") =>
+          logger.warn(s"Silver path $sinkPath is empty. Initializing empty DataFrame.")
+          sparkSession.createDataFrame(sparkSession.sparkContext.emptyRDD[Row], TargetSchema)
+        case e: Exception => throw e
+      }
     }
     else {
       val partitionsToUpdate = inputDF.select(partitionCol).distinct().collect().map(_.getString(0))

@@ -13,8 +13,17 @@ val dttm = current.format(formatter)
 
 lazy val commonAssemblySettings = Seq(
   assembly / assemblyMergeStrategy := {
-    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-    case x => MergeStrategy.first
+    case PathList("META-INF", "versions", xs @ _*) => MergeStrategy.discard
+    case "mozilla/public-suffix-list.txt" => MergeStrategy.first
+    case PathList("mozilla", "public-suffix-list.txt") => MergeStrategy.first
+    case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+
+    case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+    case PathList("META-INF", "services", _*) => MergeStrategy.filterDistinctLines
+
+    case x =>
+      val oldStrategy = (assembly / assemblyMergeStrategy).value
+      oldStrategy(x)
   }
 )
 
@@ -25,9 +34,10 @@ val sparkDependencies = Seq(
 
 lazy val common = (project in file("common"))
   .settings(
+    commonAssemblySettings,
     name := "olist-common",
     libraryDependencies ++= sparkDependencies ++ Seq(
-      "com.google.cloud.spark" %% "spark-bigquery-with-dependencies" % "0.36.1",
+      "com.google.cloud.spark" %% "spark-bigquery-with-dependencies" % "0.36.1" % "provided",
       "org.apache.logging.log4j" % "log4j-api" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-core" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.20.0",
