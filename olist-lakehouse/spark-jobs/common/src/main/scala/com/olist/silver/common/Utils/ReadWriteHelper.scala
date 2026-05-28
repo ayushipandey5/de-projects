@@ -38,38 +38,13 @@ object ReadWriteHelper {
     (readDF,validPartitions.last.split("=").last)
   }
 
-
-
-  private def listValidPartitions (sourcePath : String,
-                                   lastProcessedDate: String)
-                                  (implicit sparkSession: SparkSession) : List[String] ={
-    val conf = sparkSession.sparkContext.hadoopConfiguration
-    val fs = FileSystem.get(new Path(sourcePath).toUri, conf)
-    val statuses = fs.listStatus(new Path(sourcePath))
-
-    statuses.filter(_.isDirectory)
-      .map(_.getPath)
-      .filter(_.getName.contains("="))
-      .filter{ path =>
-        val partitionVal = path.getName.split("=").last
-      partitionVal > lastProcessedDate
-      }
-      .map(_.toString)
-      .toList
+  def readHistoricalSnapshot(tableName: String, snapshotTS: String)(implicit sparkSession: SparkSession) : DataFrame = {
+    val timeTravelDF = sparkSession.read.format("iceberg")
+      .option("as-of-timestamp", java.sql.Timestamp.valueOf(snapshotTS).getTime)
+      .load(tableName)
+    timeTravelDF
   }
 
-  private def getCheckPointValue(checkPointPath : String)(implicit sparkSession: SparkSession): Option[String] = {
-    try {
-      val checkPointVal = sparkSession.read.text(checkPointPath)
-      if (checkPointVal.isEmpty) None
-      else Some(checkPointVal.collectAsList().get(0).getString(0))
-    } catch {
-      case e: Exception =>
-        logger.error(s"Failed to read checkpoint at $checkPointPath : ${e.getMessage}")
-        None
-    }
-
-  }
 
   def writeToGCS(sinkDF : DataFrame, sinkPath: String,mode:String,partitionColumn: String) : Unit = {
     if(partitionColumn.isEmpty){
@@ -94,6 +69,49 @@ object ReadWriteHelper {
     logger.info("Write to GCS completed successfully.")
   }
 
+  def writeToIcebergTable(sinkDF : DataFrame, tableName: String, mode: String, partitionColumn: String) : Unit = {
+    val sortedDF = if(partitionColumn.isEmpty) {
+        sinkDF
+      }
+        else{
+          sinkDF.sortWithinPartitions(partitionColumn)
+        }
 
+    mode match {
+      case "append" => sortedDF.writeTo(tableName).append()
+      case "overwrite" => sortedDF.writeTo(tableName).overwritePartitions()
+    }
+  }
+
+  private def listValidPartitions (sourcePath : String,
+                                   lastProcessedDate: String)
+                                  (implicit sparkSession: SparkSession) : List[String] ={
+    val conf = sparkSession.sparkContext.hadoopConfiguration
+    val fs = FileSystem.get(new Path(sourcePath).toUri, conf)
+    val statuses = fs.listStatus(new Path(sourcePath))
+
+    statuses.filter(_.isDirectory)
+      .map(_.getPath)
+      .filter(_.getName.contains("="))
+      .filter{ path =>
+        val partitionVal = path.getName.split("=").last
+        partitionVal > lastProcessedDate
+      }
+      .map(_.toString)
+      .toList
+  }
+
+  private def getCheckPointValue(checkPointPath : String)(implicit sparkSession: SparkSession): Option[String] = {
+    try {
+      val checkPointVal = sparkSession.read.text(checkPointPath)
+      if (checkPointVal.isEmpty) None
+      else Some(checkPointVal.collectAsList().get(0).getString(0))
+    } catch {
+      case e: Exception =>
+        logger.error(s"Failed to read checkpoint at $checkPointPath : ${e.getMessage}")
+        None
+    }
+
+  }
 
 }

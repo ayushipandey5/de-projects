@@ -27,8 +27,9 @@ object Main extends SparkJob {
         DataProcessingHelper.selectAndReorder(transformedDF,ProductsTargetSchema)
         ,dedupProductsPartitionByCols, dedupProductsOrderByCols, ProductsTargetSchema)
     }
-    val sinkDF = UpsertHelper.execute(transformedDF,config.sink.dataPath, config.sink.partitionColumn,dedupPartitionByCols, dedupOrderByCols, targetSchema)
-    ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath,"overwrite",config.sink.partitionColumn)
+//    val sinkDF = UpsertHelper.execute(transformedDF,config.sink.dataPath, config.sink.partitionColumn,dedupPartitionByCols, dedupOrderByCols, targetSchema)
+//    ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath,"overwrite",config.sink.partitionColumn)
+    UpsertHelper.executeUsingIceberg(reorderedDF, config.sink.tableName, customersIcebergJoinCols, customersIcebergUpdateCols)
     DataProcessingHelper.updateCheckPoint(maxProcessedPartition,config.source.checkPointPath)
   }
 

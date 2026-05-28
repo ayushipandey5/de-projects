@@ -40,6 +40,29 @@ object UpsertHelper {
 
   }
 
+  def executeUsingIceberg(inputDF : DataFrame, coreTable : String ,joinCols : Seq[String], updateCols : Seq[String]) (implicit sparkSession: SparkSession) : Unit  = {
+    inputDF.createOrReplaceTempView("incoming_records")
+    val joinString = joinCols
+      .map(c => s"target.$c = source.$c")
+      .mkString(" AND ")
+
+    val updateString = updateCols
+      .map( c => s"target.$c = source.$c")
+      .mkString(", ")
+
+
+    val sqlQuery = s"""
+      |MERGE INTO $coreTable target
+      |USING incoming_records source
+      |ON $joinString
+      |WHEN MATCHED THEN
+      |  UPDATE SET $updateString
+      |WHEN NOT MATCHED
+      |  THEN INSERT *
+      """.stripMargin
+    sparkSession.sql(sqlQuery)
+  }
+
   private def getCoreDF(sinkPath: String, partitionCol: String, partitionsToUpdate: Array[String], TargetSchema: StructType)
                        (implicit sparkSession: SparkSession) : DataFrame = {
 

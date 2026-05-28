@@ -21,7 +21,8 @@ object Main extends SparkJob {
       case name if name.contains("category") => productCatTransTargetSchema
     }
     val sinkDF = DataProcessingHelper.selectAndReorder(transformedDF,targetSchema)
-    ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath,"overwrite","")
+//    ReadWriteHelper.writeToGCS(sinkDF,config.sink.dataPath,"overwrite","")
+    ReadWriteHelper.writeToIcebergTable(sinkDF,config.sink.tableName,"overwrite","")
   }
 
 

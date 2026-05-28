@@ -6,9 +6,10 @@ ThisBuild / version  := "0.1.0"
 ThisBuild / scalaVersion := "2.13.12"
 
 val sparkVersion = "3.5.0"
+val icebergVersion = "1.11.0"
 
 val current = LocalDateTime.now()
-val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 val dttm = current.format(formatter)
 
 lazy val commonAssemblySettings = Seq(
@@ -38,6 +39,7 @@ lazy val common = (project in file("common"))
     name := "olist-common",
     libraryDependencies ++= sparkDependencies ++ Seq(
       "com.google.cloud.spark" %% "spark-bigquery-with-dependencies" % "0.36.1" % "provided",
+      "org.apache.iceberg" %% "iceberg-spark-runtime-3.5" % icebergVersion,
       "org.apache.logging.log4j" % "log4j-api" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-core" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.20.0",

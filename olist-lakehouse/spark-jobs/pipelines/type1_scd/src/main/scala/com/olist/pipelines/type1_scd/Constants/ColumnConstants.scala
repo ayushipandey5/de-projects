@@ -23,6 +23,10 @@ object ColumnConstants {
     .add("created_date_time" , TimestampType)
     .add("event_d" , DateType)
 
+  val customersIcebergJoinCols = Seq("customer_id")
+  val customersIcebergUpdateCols = Seq("customer_unique_id","zip_code_prefix","city","state","created_date_time","event_d")
+
+
   val SellersColMap : Map[String,String] = Map(
     "seller_zip_code_prefix"     -> "zip_code_prefix",
     "seller_city"                -> "city",
