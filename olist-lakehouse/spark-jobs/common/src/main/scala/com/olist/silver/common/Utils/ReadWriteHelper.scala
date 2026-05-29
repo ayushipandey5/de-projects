@@ -87,7 +87,6 @@ object ReadWriteHelper {
   def createIcebergTableWithSchema(tableName : String ,
                                    targetSchema : StructType,
                                    partitionByColsSeq : Seq[String],
-                                   location:String,
                                    tableProperties : Map[String,String]) (implicit sparkSession: SparkSession) : Unit = {
     val schemaString: String = targetSchema
       .map { c =>
@@ -107,7 +106,9 @@ object ReadWriteHelper {
       s"""
          |CREATE TABLE IF NOT EXISTS $tableName (
          | $schemaString)
-         |USING iceberg$partitionByColsString$tablePropertiesString
+         |USING iceberg
+         |$partitionByColsString
+         |$tablePropertiesString
          |""".stripMargin
 
     sparkSession.sql(sqlQuery)

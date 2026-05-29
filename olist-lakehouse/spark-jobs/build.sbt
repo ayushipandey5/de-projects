@@ -6,7 +6,7 @@ ThisBuild / version  := "0.1.0"
 ThisBuild / scalaVersion := "2.13.12"
 
 val sparkVersion = "3.5.0"
-val icebergVersion = "1.11.0"
+val icebergVersion = "1.9.2"
 
 val current = LocalDateTime.now()
 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")

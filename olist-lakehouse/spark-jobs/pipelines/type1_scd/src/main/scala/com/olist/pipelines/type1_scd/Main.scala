@@ -18,7 +18,7 @@ object Main extends SparkJob {
     val transformedDF = Transformer.execute(rawDF,config.appName)
     val (reorderedDF, dedupPartitionByCols, dedupOrderByCols, targetSchema) = config.appName match {
       case name if name.contains("customers") =>
-        ReadWriteHelper.createIcebergTableWithSchema(config.sink.tableName,CustomersTargetSchema,Seq(),"",customersTableProperties)
+        ReadWriteHelper.createIcebergTableWithSchema(config.sink.tableName,CustomersTargetSchema,Seq(),customersTableProperties)
         (DataProcessingHelper.selectAndReorder(transformedDF,CustomersTargetSchema)
         ,dedupCustomersPartitionByCols, dedupCustomersOrderByCols, CustomersTargetSchema)
       case name if name.contains("sellers") => (

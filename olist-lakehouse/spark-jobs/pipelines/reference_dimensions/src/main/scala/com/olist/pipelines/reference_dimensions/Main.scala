@@ -18,7 +18,7 @@ object Main extends SparkJob {
     val transformedDF = Transformer.execute(rawDF,config.appName)
     val targetSchema = config.appName match {
       case name if name.contains("geolocation") =>
-        ReadWriteHelper.createIcebergTableWithSchema(config.sink.tableName,geolocationTargetSchema,Seq(),"",geolocationTableProperties)
+        ReadWriteHelper.createIcebergTableWithSchema(config.sink.tableName,geolocationTargetSchema,Seq(),geolocationTableProperties)
         geolocationTargetSchema
       case name if name.contains("category") => productCatTransTargetSchema
     }
