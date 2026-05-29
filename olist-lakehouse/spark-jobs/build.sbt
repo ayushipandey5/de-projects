@@ -3,10 +3,10 @@ import java.time.format.DateTimeFormatter
 
 ThisBuild / organization := "com.olist"
 ThisBuild / version  := "0.1.0"
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.14"
 
-val sparkVersion = "3.5.0"
-val icebergVersion = "1.9.2"
+val sparkVersion = "3.5.4"
+val icebergVersion = "1.9.1"
 
 val current = LocalDateTime.now()
 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -33,18 +33,21 @@ val sparkDependencies = Seq(
   "org.apache.spark" %% "spark-sql"  % sparkVersion % "provided"
 )
 
+val icebergDependencies = Seq(
+  "org.apache.iceberg" % "iceberg-spark-runtime-3.5_2.13" % icebergVersion % "provided",
+  "org.apache.iceberg" % "iceberg-gcp-bundle"              % icebergVersion % "provided",
+)
+
 lazy val common = (project in file("common"))
   .settings(
     commonAssemblySettings,
     name := "olist-common",
-    libraryDependencies ++= sparkDependencies ++ Seq(
-      "com.google.cloud.spark" %% "spark-bigquery-with-dependencies" % "0.36.1" % "provided",
-      "org.apache.iceberg" %% "iceberg-spark-runtime-3.5" % icebergVersion,
+    libraryDependencies ++= sparkDependencies ++ icebergDependencies ++Seq(
+//      "com.google.cloud.spark" %% "spark-bigquery-with-dependencies" % "0.36.1" % "provided",
       "org.apache.logging.log4j" % "log4j-api" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-core" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.20.0",
-      "com.github.pureconfig" %% "pureconfig" % "0.17.4",
-      "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5"
+      "com.github.pureconfig" %% "pureconfig" % "0.17.4"
     ),
 //    libraryDependencies ++= sparkDependencies
 

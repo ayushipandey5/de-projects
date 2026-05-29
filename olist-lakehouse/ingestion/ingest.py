@@ -108,6 +108,7 @@ def ingestLineItemFacts(tableNamesMap, factTableName, factTableTsCol):
 # ingestLineItemFacts({"olist_order_items_dataset":"order_id","olist_order_payments_dataset":"order_id"}, "olist_orders_dataset", "order_purchase_timestamp" )
 # ingestReferenceDimensions(["olist_geolocation_dataset","product_category_name_translation"])
 # ingestTypeOneDimensions(["olist_customers_dataset","olist_products_dataset","olist_sellers_dataset"],"2018-01-05 02:02:21")
-
+# # Adding some records and updating some in customers
+ingestTypeOneDimensions(["olist_customers_dataset"],"2018-01-09 12:02:21")
 
 
