@@ -16,7 +16,7 @@ import gcsfs
 from google.cloud import storage
 
 raw_data_dir = '../kaggle_data_raw'
-bucket_name = "olist-lakehouse-bronze-layer"
+bucket_name = "olist-bronze-l"
 
 referenceDimensionTables = ["product_category_name_translation","olist_geolocation_dataset"]
 typeOneDimensionTables = ["olist_customer_dataset","olist_sellers_dataset","olist_products_dataset"]

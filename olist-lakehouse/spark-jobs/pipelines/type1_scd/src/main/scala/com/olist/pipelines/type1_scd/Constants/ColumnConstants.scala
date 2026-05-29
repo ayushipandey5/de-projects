@@ -25,6 +25,10 @@ object ColumnConstants {
 
   val customersIcebergJoinCols = Seq("customer_id")
   val customersIcebergUpdateCols = Seq("customer_unique_id","zip_code_prefix","city","state","created_date_time","event_d")
+  val customersTableProperties = Map (
+    "format-version" -> "2",
+    "writes.delete.mode" -> "merge-on-read"
+  )
 
 
   val SellersColMap : Map[String,String] = Map(

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
 
 
 object ReadWriteHelper {
@@ -81,6 +82,35 @@ object ReadWriteHelper {
       case "append" => sortedDF.writeTo(tableName).append()
       case "overwrite" => sortedDF.writeTo(tableName).overwritePartitions()
     }
+  }
+
+  def createIcebergTableWithSchema(tableName : String ,
+                                   targetSchema : StructType,
+                                   partitionByColsSeq : Seq[String],
+                                   location:String,
+                                   tableProperties : Map[String,String]) (implicit sparkSession: SparkSession) : Unit = {
+    val schemaString: String = targetSchema
+      .map { c =>
+        s"${c.name} ${c.dataType.sql}"
+      }.mkString(",\n ")
+
+    val partitionByColsString: String = if(partitionByColsSeq.nonEmpty){
+      s"\nPARTITIONED BY (${partitionByColsSeq.mkString(", ")})"
+    } else {""}
+
+    val tablePropertiesString : String = if(tableProperties.nonEmpty){
+      val props = tableProperties.map{case (k,v) => s"'$k'='$v'"}.mkString(", ")
+      s"\nTBLPROPERTIES (\n $props\n)"
+    }else{""}
+
+    val sqlQuery =
+      s"""
+         |CREATE TABLE IF NOT EXISTS $tableName (
+         | $schemaString)
+         |USING iceberg$partitionByColsString$tablePropertiesString
+         |""".stripMargin
+
+    sparkSession.sql(sqlQuery)
   }
 
   private def listValidPartitions (sourcePath : String,
