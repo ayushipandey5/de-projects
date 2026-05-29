@@ -22,6 +22,10 @@ object ColumnConstants {
     "geolocation_city" -> "city",
     "geolocation_state" -> "state"
   )
+  val geolocationTableProperties = Map(
+    "format-version" -> "2",
+    "write.delete.mode" -> "merge-on-read"
+  )
 
   val productCatTransTargetSchema : StructType = new StructType()
     .add("category_name", StringType)

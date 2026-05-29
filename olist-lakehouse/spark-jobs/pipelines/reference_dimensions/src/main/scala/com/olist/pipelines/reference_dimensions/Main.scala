@@ -17,7 +17,9 @@ object Main extends SparkJob {
     val rawDF = sparkSession.read.parquet(config.source.dataPath)
     val transformedDF = Transformer.execute(rawDF,config.appName)
     val targetSchema = config.appName match {
-      case name if name.contains("geolocation") => geolocationTargetSchema
+      case name if name.contains("geolocation") =>
+        ReadWriteHelper.createIcebergTableWithSchema(config.sink.tableName,geolocationTargetSchema,Seq(),"",geolocationTableProperties)
+        geolocationTargetSchema
       case name if name.contains("category") => productCatTransTargetSchema
     }
     val sinkDF = DataProcessingHelper.selectAndReorder(transformedDF,targetSchema)
