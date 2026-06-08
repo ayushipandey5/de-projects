@@ -120,3 +120,65 @@ services:
       - 8080:8080
     depends_on:
       - redpanda-0
+      - redpanda-1
+      - redpanda-2
+  # automates topic creation and configuration
+  # redpanda-init:
+  #   image: docker.redpanda.com/redpandadata/redpanda:latest
+  #   container_name: redpanda-init
+  #   networks:
+  #     - redpanda_network
+  #   depends_on:
+  #     - redpanda-0
+  #     - redpanda-1
+  #     - redpanda-2
+  #   entrypoint: [ "/bin/sh", "-c" ]
+  #   command: "echo 'Waiting for Redpanda cluster...' && sleep 20 && rpk topic create opensky_raw_vectors --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 --partitions 6 --replicas 3 -c retention.ms=345600000 -c retention.bytes=524288000 && echo 'Topic created successfully!'"
+
+  # redpanda-init:
+  #   image: docker.redpanda.com/redpandadata/redpanda:latest
+  #   command:
+  #     - sh
+  #     - -c
+  #     - |
+  #       sleep 30
+  #       rpk topic create opensky_raw_vectors \
+  #         --brokers redpanda-0:9092 \
+  #         --partitions 6 \
+  #         --replicas 3
+
+  # automates topic creation and configuration
+  redpanda-init:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: redpanda-init
+    networks:
+      - redpanda_network
+    depends_on:
+      - redpanda-0
+      - redpanda-1
+      - redpanda-2
+    # Force standard bash
+    entrypoint: ["/bin/bash", "-c"]
+    # The hyphen guarantees this entire block is treated as exactly ONE argument
+    command: 
+      - |
+        echo "Waiting for Redpanda cluster..."
+        sleep 20
+
+        echo "Creating opensky_raw_vectors topic..."
+        rpk topic create opensky_raw_vectors \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 6 \
+          --replicas 3 \
+          -c retention.ms=345600000 \
+          -c retention.bytes=524288000
+        echo "Topic created successfully!"
+
+        echo "Creating clean_vectors topic.."
+        rpk topic create opensky_clean_vectors \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 4 \
+          --replicas 1 \
+          -c retention.ms=345600000 \
+          -c retention.bytes=524288000
+        echo "Topic created successfully!"
