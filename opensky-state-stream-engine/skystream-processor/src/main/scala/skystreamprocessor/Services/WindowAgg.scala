@@ -3,7 +3,7 @@ package skystreamprocessor.Services
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{Deserializer, Serde, Serdes, Serializer}
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
-import org.apache.kafka.streams.kstream.TimeWindows
+import org.apache.kafka.streams.kstream.{SessionWindows, SlidingWindows, TimeWindows}
 import org.apache.logging.log4j.{LogManager, Logger}
 import skystreamprocessor.Constants.FlightStats
 import upickle.default._
@@ -18,11 +18,11 @@ import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.serialization.Serdes._
 
 
-object TumblingWindowAgg {
+object WindowAgg {
   protected val logger : Logger = LogManager.getLogger(this.getClass)
   def main(args : Array[String]) : Unit = {
     val appName = "tumbling-analyst-v1"
-    val brokers = "localhost://19092,localhost://29092,localhost://39092"
+    val brokers = "localhost:19092,localhost:29092,localhost:39092"
     val read_topic = "opensky_clean_vectors"
 
     val props = new Properties()
@@ -47,7 +47,21 @@ object TumblingWindowAgg {
     val windowDuration = Duration.ofMinutes(5)
     val gracePeriod = Duration.ofMinutes(1)
 
+//    TUMBLING WINDOW
     val tumblingWindow = TimeWindows.ofSizeAndGrace(windowDuration,gracePeriod)
+
+//    HOPPING WINDOW
+    val hop = Duration.ofMinutes(2)
+    val hoppingWindow = TimeWindows
+      .ofSizeAndGrace(windowDuration,gracePeriod)
+      .advanceBy(hop)
+
+//    SLIDING WINDOW
+    val slidingWindow = SlidingWindows.ofTimeDifferenceAndGrace(windowDuration,gracePeriod)
+
+//    SESSION WINDOWS
+    val sessionGap = Duration.ofMinutes(10)
+    val sessionWindow = SessionWindows.ofInactivityGapWithNoGrace(sessionGap)
 
     implicit val flightStatsRW : ReadWriter[FlightStats] = macroRW[FlightStats]
 
