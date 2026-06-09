@@ -1,10 +1,11 @@
-package skystreamprocessor.services
+package skystreamprocessor.Services
 
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{Deserializer, Serde, Serdes, Serializer}
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
 import org.apache.kafka.streams.kstream.TimeWindows
 import org.apache.logging.log4j.{LogManager, Logger}
+import skystreamprocessor.Constants.FlightStats
 import upickle.default._
 
 import java.time.Duration
@@ -15,11 +16,6 @@ import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Materialized
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.serialization.Serdes._
-
-case class FlightStats(
-                      count: Long,
-                      totalVelocity: Double
-                      )
 
 
 object TumblingWindowAgg {

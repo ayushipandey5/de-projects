@@ -1,4 +1,4 @@
-package skystreamprocessor.services
+package skystreamprocessor.Services
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.streams.processor.TimestampExtractor
