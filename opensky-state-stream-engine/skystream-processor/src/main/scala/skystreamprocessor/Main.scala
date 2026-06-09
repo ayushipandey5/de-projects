@@ -44,6 +44,7 @@ object Main {
             "icao24" -> arr(0).str,
             "callsign" -> (if (arr(1).isNull) "UNKNOWN" else arr(1).str.trim),
             "origin_country" -> arr(2).str,
+            "last_contact" -> arr(4).num,
             "longitude" -> arr(5).num,
             "latitude" -> arr(6).num,
             "velocity" -> (if (arr(9).isNull) 0.0 else arr(9).num),
