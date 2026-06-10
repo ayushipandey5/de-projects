@@ -177,8 +177,16 @@ services:
         echo "Creating clean_vectors topic.."
         rpk topic create opensky_clean_vectors \
           --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
-          --partitions 4 \
-          --replicas 1 \
+          --partitions 6 \
+          --replicas 3 \
           -c retention.ms=345600000 \
           -c retention.bytes=524288000
+        echo "Topic created successfully!"
+
+        echo "Creating aircraft_registry topic .."
+        rpk topic create aircraft_registry \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 6 \
+          --replicas 3 \
+          -c cleanup.policy=compact
         echo "Topic created successfully!"

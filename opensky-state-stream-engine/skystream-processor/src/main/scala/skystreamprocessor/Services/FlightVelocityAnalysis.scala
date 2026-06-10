@@ -5,20 +5,18 @@ import org.apache.kafka.common.serialization.{Deserializer, Serde, Serdes, Seria
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
 import org.apache.kafka.streams.kstream.{SessionWindows, SlidingWindows, TimeWindows}
 import org.apache.logging.log4j.{LogManager, Logger}
-import skystreamprocessor.Constants.FlightStats
+import skystreamprocessor.Constants.{FlightStats, FlightTimestampExtractor}
 import upickle.default._
 
 import java.time.Duration
 import java.util.Properties
-
-// --- THE CRITICAL SCALA API IMPORTS ---
 import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.scala.kstream.Materialized
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.serialization.Serdes._
 
 
-object WindowAgg {
+object FlightVelocityAnalysis {
   protected val logger : Logger = LogManager.getLogger(this.getClass)
   def main(args : Array[String]) : Unit = {
     val appName = "tumbling-analyst-v1"

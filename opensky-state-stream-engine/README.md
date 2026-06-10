@@ -86,3 +86,9 @@ Here is a realistic, senior-level sprint plan for the week.
     - Do not rely on spinning up Redpanda every time to test your logic.
 
     - Write 2-3 unit tests using Kafka's TopologyTestDriver. This proves to an interviewer that you know how to build deterministic, CI/CD-friendly streaming code without requiring a live cluster.
+
+- day-4 join with GlobalKTable
+- day 5 - stream stream join
+- day 6 schema registry
+- day 7 ksqldb
+- day 8 topologu test 
