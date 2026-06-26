@@ -190,3 +190,11 @@ services:
           --replicas 3 \
           -c cleanup.policy=compact
         echo "Topic created successfully!"
+
+        echo "Creating global_registry topic .."
+        rpk topic create global_registry \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 1 \
+          --replicas 0 \
+          -c cleanup.policy=compact
+        echo "Topic created successfully!"

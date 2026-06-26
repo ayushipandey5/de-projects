@@ -10,6 +10,7 @@ import org.apache.kafka.streams.scala.kstream.{KStream, KTable}
 import org.apache.kafka.streams.scala.serialization.Serdes._
 
 import java.util.Properties
+import scala.util.Try
 
 object FlightEnricher {
   protected val logger : Logger = LogManager.getLogger(this.getClass)
@@ -59,21 +60,25 @@ object FlightEnricher {
 //    )
 
 //    LEFT JOin
+
     val enrichedStream : KStream[String,String] = cleanVectorStream.leftJoin(registryTable)(
-      (cleanVectorStr,registryTableStr) =>
+      (cleanVectorJson, registryTableJson) =>
         try{
-          val cleaVectorObj = ujson.read(cleanVectorStr).str
-          val registryTableObj = Option(registryTableStr)
-            .filter(_.nonEmpty)
-            .map(s => ujson.read(s).str)
-          try{
-            val manufacturer = registryTableObj
-              .flatMap(s => s.getOrElse)
-          }
-        } catch {
-          case e :Exception =>
-            logger.warn(s"Failed to join payloads: ${e.getMessage}")
-            cleanVectorStr
+          val cleanVectorObj = ujson.read(cleanVectorJson).obj
+          val registryTableObj = Try(ujson.read(registryTableJson).obj).getOrElse(ujson.Obj().obj)
+
+          val manufacturer = Try(registryTableObj("manufacturer")).getOrElse(ujson.Str("Unknown"))
+          val model = Try(registryTableObj("model")).getOrElse(ujson.Str("Unknown"))
+          val airline = Try(registryTableObj("airline")).getOrElse(ujson.Str("Unknown"))
+
+          cleanVectorObj("airline_manufacturer") = manufacturer
+          cleanVectorObj("aircraft_model") = model
+          cleanVectorObj("airline") = airline
+          ujson.write(cleanVectorObj)
+        }catch {
+          case e:Exception =>
+            logger.error(s"Error in joining ${e.getMessage}")
+            cleanVectorJson
         }
     )
 
@@ -87,6 +92,7 @@ object FlightEnricher {
 
     sys.ShutdownHookThread{
       logger.info("Shutting down Enricher Topology..")
+      streams.close()
     }
 
     logger.info("Enricher Started. Waiting for matching keys in both topics...")
