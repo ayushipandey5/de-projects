@@ -191,10 +191,28 @@ services:
           -c cleanup.policy=compact
         echo "Topic created successfully!"
 
+        echo "Creating aircraft_enriched topic .."
+        rpk topic create aircraft_enriched \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 6 \
+          --replicas 3 \
+          -c retention.ms=345600000 \
+          -c retention.bytes=524288000
+        echo "Topic created successfully!"
+
         echo "Creating global_registry topic .."
         rpk topic create global_registry \
           --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
           --partitions 1 \
           --replicas 0 \
           -c cleanup.policy=compact
+        echo "Topic created successfully!"
+
+        echo "Creating raw_flights topic .."
+        rpk topic create raw_flights \
+          --brokers redpanda-0:9092,redpanda-1:9092,redpanda-2:9092 \
+          --partitions 6 \
+          --replicas 3 \
+          -c retention.ms=345600000 \
+          -c retention.bytes=524288000
         echo "Topic created successfully!"
