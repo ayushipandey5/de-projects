@@ -25,7 +25,7 @@ class TokenManager:
         self._expires_at : Optional[datetime] = None
 
     def get_token(self) -> str :
-        if self._token and self._expires_at and datetime.now() < self.expires_at :
+        if self._token and self._expires_at and datetime.now() < self._expires_at :
             return self._token
         return self.refresh_token()
 
@@ -124,21 +124,21 @@ if __name__ == "__main__":
     api_client.open_session()
 
     try:
-        # while True:
-        data = api_client.fetch_states()
-        # print(data)
-        # with open("data.txt","w") as file:
-        #     # file.write(data)
-        #     json.dump(data,file, indent=4)
-        if data and data.get("states"):
-            for state in data["states"]:
-                icao24 = state[0]
-                producer.send_message(
-                    topic="opensky_raw_vectors",
-                    key=icao24,
-                    value=state
-                )
-        time.sleep(api_client.request_interval)
+        while True:
+            data = api_client.fetch_states()
+            # print(data)
+            # with open("data.txt","w") as file:
+            #     # file.write(data)
+            #     json.dump(data,file, indent=4)
+            if data and data.get("states"):
+                for state in data["states"]:
+                    icao24 = state[0]
+                    producer.send_message(
+                        topic="opensky_raw_vectors",
+                        key=icao24,
+                        value=state
+                    )
+            time.sleep(api_client.request_interval)
     except KeyboardInterrupt:
         print("Shutting down ingestion engine securely...")
     finally:

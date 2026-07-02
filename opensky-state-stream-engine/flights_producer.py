@@ -145,16 +145,17 @@ if __name__ == "__main__":
     api_client.open_session()
 
     try:
-        # while True:
-        data = api_client.get_flights()
-        if data:
-            for flight in data:
-                icao24 = flight.get("icao24")
-                if icao24:
-                    producer.produce_message(
-                        key=icao24,
-                        value=flight
-                    )
+        while True:
+            data = api_client.get_flights()
+            if data:
+                for flight in data:
+                    icao24 = flight.get("icao24")
+                    if icao24:
+                        producer.produce_message(
+                            key=icao24,
+                            value=flight
+                        )
+            time.sleep(api_client.request_interval)
         
     except KeyboardInterrupt:
         print("Shutting down ingestion engine securely...")

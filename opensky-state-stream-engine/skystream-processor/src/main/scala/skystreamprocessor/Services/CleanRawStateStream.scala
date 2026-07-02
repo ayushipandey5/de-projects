@@ -47,6 +47,8 @@ object CleanRawStateStream {
             "last_contact" -> arr(4).num,
             "longitude" -> arr(5).num,
             "latitude" -> arr(6).num,
+            "vertical_rate" -> arr(11).num,
+            "geo_altitude" -> arr(13).num,
             "velocity" -> (if (arr(9).isNull) 0.0 else arr(9).num),
             "on_ground" -> arr(8).bool,
             "category" -> ( if (arr.arr.length <= 17 || arr(17).isNull) {"NO information provided"}
