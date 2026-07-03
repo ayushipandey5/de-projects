@@ -1,16 +1,19 @@
 package skystreamprocessor.Services
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
+import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.streams.{KafkaStreams, StreamsConfig}
 import org.apache.kafka.streams.kstream.JoinWindows
 import org.apache.kafka.streams.scala.StreamsBuilder
-import org.apache.kafka.streams.scala.kstream.KStream
+import org.apache.kafka.streams.scala.kstream.{Consumed, KStream, StreamJoined}
 import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.serialization.Serdes._
 
 import java.time.{Duration, Instant, ZoneId}
-import java.util.Properties
+import java.util.{Collections, Properties}
 import scala.util.Try
 
 object FeatureVector {
@@ -29,31 +32,49 @@ object FeatureVector {
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG,bootstrap_servers)
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
 
+    val schemaRegistryUrl = "http://localhost:18081"
+    val serdeConfig = Collections.singletonMap(
+      AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG,
+      schemaRegistryUrl
+    )
+
+    val avroSerde = new GenericAvroSerde()
+    avroSerde.configure(serdeConfig,false)
+
     val builder = new StreamsBuilder()
     val stateStream : KStream[String,String] = builder.stream[String,String](state_topic)
-    val flightsStream : KStream[String,String] = builder.stream[String,String](flights_topic)
+    val flightsStream = builder.stream(flights_topic)(
+      Consumed.`with`(stringSerde,avroSerde)
+    )
 
     val windowSize = JoinWindows.ofTimeDifferenceWithNoGrace(Duration.ofHours(3))
+    val streamJoinParam = StreamJoined.`with`(
+      stringSerde,
+      avroSerde,
+      stringSerde
+    )
 
-    val features_vector_stream : KStream[String,String] = flightsStream.join(stateStream)(
-      (flightJson,stateJson) =>
+    val features_vector_stream = flightsStream.join(stateStream)(
+      (flightRecord:GenericRecord, stateJson) =>
       try{
-        val flightObj = ujson.read(flightJson).obj
         val stateObj = ujson.read(stateJson).obj
 
         val lastContact = Try(stateObj("last_contact").num.toLong).getOrElse(0L)
-        val firstSeen = Try(flightObj("firstSeen").num.toLong).getOrElse(0L)
+        val firstSeen = flightRecord.get("firstSeen").asInstanceOf[Long]
 
         val zonedDateTime = Instant.ofEpochSecond(lastContact).atZone(ZoneId.of("UTC"))
-        val distanceKm = Try(flightObj("estArrivalAirportHorizDistance").num / 1000.0).getOrElse(-1.0)
+        val distanceKm = flightRecord.get("estArrivalAirportHorizDistance").asInstanceOf[Double] / 1000.0
+
+        val depAirport = Option(flightRecord.get("estDepartureAirport")).map(_.toString).getOrElse("Unknown")
+        val arrAirport = Option(flightRecord.get("estArrivalAirport")).map(_.toString).getOrElse("Unknown")
 
         val featureObj = ujson.Obj(
-          "icao24" -> flightObj.getOrElse("icao24", ujson.Str("Unknown")),
+          "icao24" -> flightRecord.get("icao24").toString,
           "timestamp" -> lastContact,
 
           "intent_features" -> ujson.Obj(
-            "departure_airport" -> flightObj.getOrElse("estDepartureAirport", ujson.Str("Unknown")),
-            "arrival_airport" -> flightObj.getOrElse("estArrivalAirport", ujson.Str("Unknown"))
+            "departure_airport" -> depAirport,
+            "arrival_airport" -> arrAirport
           ),
 
           "kinematic_features" -> ujson.Obj(
@@ -81,7 +102,7 @@ object FeatureVector {
           null
       },
       windowSize
-    )
+    )(streamJoinParam)
 
     features_vector_stream.filterNot((key, value) => value == null).to(write_topic)
 

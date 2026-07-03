@@ -2,6 +2,7 @@ ThisBuild / scalaVersion := "2.13.12"
 val kafkaVersion = "3.7.0"
 
 resolvers += "Maven Central" at "https://repo1.maven.org/maven2/"
+resolvers += "Confluent" at "https://packages.confluent.io/maven/"
 
 lazy val root = (project in file("."))
   .settings(
@@ -12,7 +13,9 @@ lazy val root = (project in file("."))
       "org.apache.logging.log4j" % "log4j-api" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-core" % "2.20.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.20.0",
-      "com.github.pureconfig" %% "pureconfig" % "0.17.4"
+      "com.github.pureconfig" %% "pureconfig" % "0.17.4",
+      "io.confluent" % "kafka-streams-avro-serde" % "7.5.0",
+      "org.apache.avro" % "avro" % "1.11.3"
     ),
       assembly / mainClass := Some("skystreamprocessor.Main")
   )

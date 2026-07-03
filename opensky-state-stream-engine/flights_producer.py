@@ -7,6 +7,12 @@ import argparse
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
+from confluent_kafka import SerializingProducer
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+from confluent_kafka.serialization import StringSerializer
+
+
 class TokenManager:
     def __init__(self,
         session: requests.Session,
@@ -90,6 +96,7 @@ class OpenSkyFlightClient:
                 return response.json()
             else:
                 print(f"Error fetching data: HTTP {response.status_code}")
+                print(f"Seconds to wait : {response.headers.get('X-Rate-Limit-Retry-After-Seconds')}")
                 return None
         except requests.exceptions.RequestException as e:
             print(f"Error fetching data: {e}")
@@ -104,23 +111,40 @@ class KafkaProducerApp:
         self.brokers = brokers
         self.topic = topic
 
+        self.value_schema_str = """
+            { "type": "record", "name": "RawFlightIntent", "namespace": "com.skystream.avro", "fields": [ { "name": "icao24", "type": "string" }, { "name": "firstSeen", "type": "long" }, { "name": "estDepartureAirport", "type": [ "null", "string" ], "default": null }, { "name": "lastSeen", "type": "long" }, { "name": "estArrivalAirport", "type": [ "null", "string" ], "default": null }, { "name": "callsign", "type": [ "null", "string" ], "default": null }, { "name": "estDepartureAirportHorizDistance", "type": "int" }, { "name": "estDepartureAirportVertDistance", "type": "int" }, { "name": "estArrivalAirportHorizDistance", "type": "int" }, { "name": "estArrivalAirportVertDistance", "type": "int" }, { "name": "departureAirportCandidatesCount", "type": "int" }, { "name": "arrivalAirportCandidatesCount", "type": "int" } ] }
+        """
+        self.schema_registry_conf = {'url': 'http://localhost:18081'}
+        self.schema_registry_client = SchemaRegistryClient(self.schema_registry_conf)
+
+        self.avro_serializer = AvroSerializer(
+            self.schema_registry_client,
+            self.value_schema_str,
+            lambda record,ctx : record
+        )
+
         self.conf = {
             'bootstrap.servers': brokers,
+            'key.serializer': StringSerializer('utf_8'),
+            'value.serializer': self.avro_serializer,
             'client.id' : 'flights-bootstrapper'
         }
 
-        self.producer = Producer(self.conf)
+        self.producer = SerializingProducer(self.conf)
+
+
+
     
     def delivery_report(self,err,msg):
         if err is not None:
             print(f"Failed to deliver record: {err}")
     
-    def produce_message(self,key:str,value:Any) :
+    def produce_message(self,key:str,value:dict) :
         try:
             self.producer.produce(
                 topic = self.topic,
                 key = key,
-                value = json.dumps(value).encode('utf-8'),
+                value = value,
                 callback=self.delivery_report
             )
         except Exception as e:
@@ -145,17 +169,17 @@ if __name__ == "__main__":
     api_client.open_session()
 
     try:
-        while True:
-            data = api_client.get_flights()
-            if data:
-                for flight in data:
-                    icao24 = flight.get("icao24")
-                    if icao24:
-                        producer.produce_message(
-                            key=icao24,
-                            value=flight
-                        )
-            time.sleep(api_client.request_interval)
+        # while True:
+        data = api_client.get_flights()
+        if data:
+            for flight in data:
+                icao24 = flight.get("icao24")
+                if icao24:
+                    producer.produce_message(
+                        key=icao24,
+                        value=flight
+                    )
+        # time.sleep(api_client.request_interval)
         
     except KeyboardInterrupt:
         print("Shutting down ingestion engine securely...")

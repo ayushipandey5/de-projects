@@ -1,0 +1,5 @@
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data '{
+    "schema": "{\"type\":\"record\",\"name\":\"CleanStateVector\",\"namespace\":\"com.skystream.avro\",\"fields\":[{\"name\":\"icao24\",\"type\":\"string\"},{\"name\":\"callsign\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"origin_country\",\"type\":\"string\"},{\"name\":\"last_contact\",\"type\":\"long\"},{\"name\":\"longitude\",\"type\":\"double\"},{\"name\":\"latitude\",\"type\":\"double\"},{\"name\":\"vertical_rate\",\"type\":\"double\",\"default\":0.0},{\"name\":\"geo_altitude\",\"type\":\"double\",\"default\":-1.0},{\"name\":\"velocity\",\"type\":\"double\"},{\"name\":\"on_ground\",\"type\":[\"null\",\"boolean\"],\"default\":null},{\"name\":\"category\",\"type\":[\"null\",\"string\"],\"default\":null}]}"
+  }' \
+  http://localhost:18081/subjects/opensky_clean_vectors-value/versions
