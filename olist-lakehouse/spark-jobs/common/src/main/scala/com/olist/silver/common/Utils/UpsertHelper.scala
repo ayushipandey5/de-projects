@@ -12,9 +12,21 @@ object UpsertHelper {
 
   def execute(inputDF: DataFrame, sinkPath: String, partitionCol: String, partitionByCols: Seq[Column], orderByCols: Seq[Column], TargetSchema: StructType)
             (implicit sparkSession: SparkSession) : DataFrame = {
-    val partitionsToUpdate = inputDF.select(partitionCol).distinct().collect().map(_.getString(0))
-    val coreDF = getCoreDF(sinkPath,partitionCol,partitionsToUpdate,TargetSchema)
 
+    val coreDF = if(partitionCol.isBlank){
+      try {
+        sparkSession.read.parquet(sinkPath)
+      } catch {
+        case e: org.apache.spark.sql.AnalysisException if e.getMessage().contains("UNABLE_TO_INFER_SCHEMA") =>
+          logger.warn(s"Silver path $sinkPath is empty. Initializing empty DataFrame.")
+          sparkSession.createDataFrame(sparkSession.sparkContext.emptyRDD[Row], TargetSchema)
+        case e: Exception => throw e
+      }
+    }
+    else {
+      val partitionsToUpdate = inputDF.select(partitionCol).distinct().collect().map(_.getString(0))
+      getCoreDF(sinkPath, partitionCol, partitionsToUpdate, TargetSchema)
+    }
     val bronzeDF = inputDF.withColumn("priority", lit(1))
     val silverDF = coreDF.withColumn("priority", lit(2))
 
@@ -26,6 +38,29 @@ object UpsertHelper {
       .drop("rank","priority")
     dedupDF
 
+  }
+
+  def executeUsingIceberg(inputDF : DataFrame, coreTable : String ,joinCols : Seq[String], updateCols : Seq[String]) (implicit sparkSession: SparkSession) : Unit  = {
+    inputDF.createOrReplaceTempView("incoming_records")
+    val joinString = joinCols
+      .map(c => s"target.$c = source.$c")
+      .mkString(" AND ")
+
+    val updateString = updateCols
+      .map( c => s"target.$c = source.$c")
+      .mkString(", ")
+
+
+    val sqlQuery = s"""
+      |MERGE INTO $coreTable target
+      |USING incoming_records source
+      |ON $joinString
+      |WHEN MATCHED THEN
+      |  UPDATE SET $updateString
+      |WHEN NOT MATCHED
+      |  THEN INSERT *
+      """.stripMargin
+    sparkSession.sql(sqlQuery)
   }
 
   private def getCoreDF(sinkPath: String, partitionCol: String, partitionsToUpdate: Array[String], TargetSchema: StructType)

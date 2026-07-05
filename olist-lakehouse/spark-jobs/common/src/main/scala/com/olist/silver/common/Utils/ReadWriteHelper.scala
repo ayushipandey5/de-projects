@@ -5,6 +5,7 @@ import org.apache.logging.log4j.{LogManager, Logger}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
 
 
 object ReadWriteHelper {
@@ -38,7 +39,80 @@ object ReadWriteHelper {
     (readDF,validPartitions.last.split("=").last)
   }
 
+  def readHistoricalSnapshot(tableName: String, snapshotTS: String)(implicit sparkSession: SparkSession) : DataFrame = {
+    val timeTravelDF = sparkSession.read.format("iceberg")
+      .option("as-of-timestamp", java.sql.Timestamp.valueOf(snapshotTS).getTime)
+      .load(tableName)
+    timeTravelDF
+  }
 
+
+  def writeToGCS(sinkDF : DataFrame, sinkPath: String,mode:String,partitionColumn: String) : Unit = {
+    if(partitionColumn.isEmpty){
+      logger.info(s"No partition column mentioned, ${mode}ing to ${sinkPath}")
+      sinkDF
+        .write
+        .format("parquet")
+        .mode(mode)
+        .save(sinkPath)
+    }
+    else {
+      logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
+      sinkDF
+        .repartition(col(partitionColumn))
+        .write
+        .format("parquet")
+        .partitionBy(partitionColumn)
+        .mode(mode)
+        .save(sinkPath)
+    }
+
+    logger.info("Write to GCS completed successfully.")
+  }
+
+  def writeToIcebergTable(sinkDF : DataFrame, tableName: String, mode: String, partitionColumn: String) : Unit = {
+    val sortedDF = if(partitionColumn.isEmpty) {
+        sinkDF
+      }
+        else{
+          sinkDF.sortWithinPartitions(partitionColumn)
+        }
+
+    mode match {
+      case "append" => sortedDF.writeTo(tableName).append()
+      case "overwrite" => sortedDF.writeTo(tableName).overwritePartitions()
+    }
+  }
+
+  def createIcebergTableWithSchema(tableName : String ,
+                                   targetSchema : StructType,
+                                   partitionByColsSeq : Seq[String],
+                                   tableProperties : Map[String,String]) (implicit sparkSession: SparkSession) : Unit = {
+    val schemaString: String = targetSchema
+      .map { c =>
+        s"${c.name} ${c.dataType.sql}"
+      }.mkString(",\n ")
+
+    val partitionByColsString: String = if(partitionByColsSeq.nonEmpty){
+      s"\nPARTITIONED BY (${partitionByColsSeq.mkString(", ")})"
+    } else {""}
+
+    val tablePropertiesString : String = if(tableProperties.nonEmpty){
+      val props = tableProperties.map{case (k,v) => s"'$k'='$v'"}.mkString(", ")
+      s"\nTBLPROPERTIES (\n $props\n)"
+    }else{""}
+
+    val sqlQuery =
+      s"""
+         |CREATE TABLE IF NOT EXISTS $tableName (
+         | $schemaString)
+         |USING iceberg
+         |$partitionByColsString
+         |$tablePropertiesString
+         |""".stripMargin
+
+    sparkSession.sql(sqlQuery)
+  }
 
   private def listValidPartitions (sourcePath : String,
                                    lastProcessedDate: String)
@@ -52,7 +126,7 @@ object ReadWriteHelper {
       .filter(_.getName.contains("="))
       .filter{ path =>
         val partitionVal = path.getName.split("=").last
-      partitionVal > lastProcessedDate
+        partitionVal > lastProcessedDate
       }
       .map(_.toString)
       .toList
@@ -70,21 +144,5 @@ object ReadWriteHelper {
     }
 
   }
-
-  def writeToGCS(sinkDF : DataFrame, sinkPath: String,partitionColumn: String) : Unit = {
-    logger.info(s"Starting write to ${sinkPath} partitioned by ${partitionColumn}")
-
-    sinkDF
-      .repartition(col(partitionColumn))
-      .write
-      .format("parquet")
-      .partitionBy(partitionColumn)
-      .mode("overwrite")
-      .save(sinkPath)
-
-    logger.info("Write to GCS completed successfully.")
-  }
-
-
 
 }

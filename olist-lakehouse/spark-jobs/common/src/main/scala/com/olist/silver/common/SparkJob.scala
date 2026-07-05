@@ -14,8 +14,16 @@ trait SparkJob {
     val configPath = Option(System.getProperty("appConfig")).getOrElse {
       throw new RuntimeException("Missing JVM flag for appConfig")
     }
-    val config: PipelineConfig = ConfigLoader.load(configPath)
+//    val config: PipelineConfig = ConfigLoader.load(configPath)
+    val runType = Option(System.getProperty("runType")).getOrElse {
+      throw new RuntimeException("Missing JVM flag for runType")
+    }
+    val config: PipelineConfig = runType match {
+      case "iceberg" => ConfigLoader.loadIcebergConfig(configPath)
+      case _ => ConfigLoader.load(configPath)
+    }
     logger.info("Creating sparkSession")
+
 
     implicit val sparkSession: SparkSession = {
       val builder = SparkSession.builder().appName(config.appName)

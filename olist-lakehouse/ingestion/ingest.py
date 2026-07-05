@@ -16,7 +16,7 @@ import gcsfs
 from google.cloud import storage
 
 raw_data_dir = '../kaggle_data_raw'
-bucket_name = "olist-lakehouse-bronze-layer"
+bucket_name = "olist-bronze-l"
 
 referenceDimensionTables = ["product_category_name_translation","olist_geolocation_dataset"]
 typeOneDimensionTables = ["olist_customer_dataset","olist_sellers_dataset","olist_products_dataset"]
@@ -108,6 +108,7 @@ def ingestLineItemFacts(tableNamesMap, factTableName, factTableTsCol):
 # ingestLineItemFacts({"olist_order_items_dataset":"order_id","olist_order_payments_dataset":"order_id"}, "olist_orders_dataset", "order_purchase_timestamp" )
 # ingestReferenceDimensions(["olist_geolocation_dataset","product_category_name_translation"])
 # ingestTypeOneDimensions(["olist_customers_dataset","olist_products_dataset","olist_sellers_dataset"],"2018-01-05 02:02:21")
-
+# # Adding some records and updating some in customers
+ingestTypeOneDimensions(["olist_customers_dataset"],"2018-01-09 12:02:21")
 
 
