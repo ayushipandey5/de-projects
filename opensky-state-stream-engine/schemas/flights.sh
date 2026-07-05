@@ -1,0 +1,5 @@
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data '{
+        "schema": "{\"type\":\"record\",\"name\":\"RawFlightIntent\",\"namespace\":\"com.skystream.avro\",\"fields\":[{\"name\":\"icao24\",\"type\":\"string\"},{\"name\":\"firstSeen\",\"type\":\"long\"},{\"name\":\"estDepartureAirport\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"lastSeen\",\"type\":\"long\"},{\"name\":\"estArrivalAirport\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"callsign\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"estDepartureAirportHorizDistance\",\"type\":\"int\"},{\"name\":\"estDepartureAirportVertDistance\",\"type\":\"int\"},{\"name\":\"estArrivalAirportHorizDistance\",\"type\":\"int\"},{\"name\":\"estArrivalAirportVertDistance\",\"type\":\"int\"},{\"name\":\"departureAirportCandidatesCount\",\"type\":\"int\"},{\"name\":\"arrivalAirportCandidatesCount\",\"type\":\"int\"}]}"
+    }' \
+    http://localhost:18081/subjects/raw_flights-value/versions
