@@ -12,7 +12,7 @@ url = "https://stream.wikimedia.org/v2/stream/recentchange"
 publisher = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path(project_id,topic_id)
 try:
-    topic = publisher.get_topic(request={"name": topic_path})
+    topic = publisher.get_topic(request={"topic": topic_path})
     print(f"Topic {topic_path} found.")
 except Exception as e:
     print(f"Topic {topic_path} not found. Creating it now...")
