@@ -5,7 +5,7 @@ from datetime import datetime
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 import apache_beam.transforms.window as window
-from apache_beam.transforms.trigger import AfterWatermark, AccumulationMode
+from apache_beam.transforms.trigger import AfterWatermark, AccumulationMode, AfterCount
 
 class AssignEventWatermark(beam.DoFn):
     def process(self,element):
@@ -41,11 +41,11 @@ def run():
     parser.add_argument('--project',required=True,help='GCP Project Id')
     parser.add_argument('--subscription',required=True,help='subscription_id')
     parser.add_argument('--bigq_dataset',required=True,help='big query dataset')
-    parser.add_argument('--tableName',required=True,help="BigQuery Table")
 
     known_args,pipeline_args = parser.parse_known_args()
 
-    pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options = PipelineOptions(pipeline_args,
+        project=known_args.project)
     pipeline_options.view_as(StandardOptions).streaming = True
 
     with beam.Pipeline(options=pipeline_options) as p:
@@ -61,7 +61,7 @@ def run():
             | "Branch1 : Extract Server Domain" >> beam.Map(lambda x: (x.get("server_name","unknown"),1))
             | "Branch1 : 1-Min Fixed Window" >> beam.WindowInto(
                 window.FixedWindows(60),
-                trigger=AfterWatermark(),
+                trigger=AfterWatermark(late=AfterCount(1)),
                 allowed_lateness=10,
                 accumulation_mode=AccumulationMode.ACCUMULATING)
             | "Branch1 : Count Per Domain" >> beam.CombinePerKey(sum)
