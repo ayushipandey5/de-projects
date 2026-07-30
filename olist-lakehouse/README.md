@@ -33,4 +33,4 @@ This dataset contains 9 tables, categorized in :
 
 - Analytics (to Gold): The final presentation layer (Gold) is built and materialized using dbt directly inside BigQuery for downstream reporting.
 
-
+![alt text](image-1.png)
