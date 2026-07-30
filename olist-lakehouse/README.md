@@ -1,7 +1,10 @@
 # OLIST LAKEHOUSE
-This repo contains end to end data platform for Brazilian E-Commerce (Olist) on Kaggle — Orders, products, sellers, reviews across multiple relational tables. 
 
-## 1. About Dataset - Data Model
+### 📌 Project Overview
+The Olist E-Commerce dataset is a rich, real-world dataset capturing over 100,000 orders made across multiple marketplaces in Brazil.
+This project builds a production-grade, end-to-end Data Lakehouse on Google Cloud Platform (GCP) to ingest, model, and serve this data for downstream analytics. By implementing a strict Medallion Architecture (Bronze, Silver, Gold) using Apache Spark, Apache Iceberg, and dbt, this platform resolves complex relational dependencies to unlock business insights into delivery performance, customer satisfaction, and seller revenue trends.
+
+### 📊 Data Modelling
 This dataset contains 9 tables, categorized in :
 1. Dimensions 
     - **Reference Dimensions** (Full Overwrite) : Extract entire source table daily 
@@ -19,28 +22,15 @@ This dataset contains 9 tables, categorized in :
     - **Transactional Fact** : Append Only Fact - once reviewed, record is saved (immutable). Its a discrete point in time event.
         - olist_order_reviews_dataset 
 
-    - **Line Item Facts** (Child Facts) : Data which also records events but they dont have their own timestamps. They ahve higher granulkarity (more summary)
+    - **Line Item Facts** (Child Facts) : Data which also records events but they dont have their own timestamps. They ahve higher granulkarity (more summary) (individual items within an order).
         - olist_order_payments_dataset
         - olist_order_items_dataset
 
-## 2. Data Ingestion
-Done using a python script
-- Read data from kaggle API
-- Read only some record?
-- connect to GCS
-- write into a partition folder (based on ingestion date) (how many records can each partition have?)
-Run this script daily (automate using airflow)
+### 🏗️ Architecture & Pipeline 
+- Ingestion (to Bronze): A Python ingestion script adds an ingested_timestamp to the downloaded dataset and uploads it to a Google Cloud Storage (GCS) bucket, partitioned and stored in Parquet format.
+
+- Processing (to Silver): Multiple Spark/Scala pipelines transform the raw Bronze data into cleaned, modeled Silver datasets. These are stored as Apache Iceberg managed tables within Google BigQuery.
+
+- Analytics (to Gold): The final presentation layer (Gold) is built and materialized using dbt directly inside BigQuery for downstream reporting.
 
 
-
-1. Data Ingestion - through kaggle api
-2. Data stored in GCS bucket - bronze layer
-3. Airflow etl pipeline - sink to silver layer (runs in Data proc)
-4. Silver layer is BQ
-5. Gold layer ? What aggregates do I have to create a gold layer ?
-6. where does iceberg come in this picture?
-
-
-
-According to Claude - 
-![alt text](image.png)
